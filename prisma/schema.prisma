@@ -13,12 +13,12 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  extensions = [pgvector(map: "vector", schema: "extensions")]  // Add the pgvector extension
+  extensions = [vector]
 }
 
 
 model Chunk {
   id        Int     @id @default(autoincrement())
   content   String
-  embedding Unsupported("vector(1536)") // pgvector(1536)
+  embedding Unsupported("vector(1536)")
 }
