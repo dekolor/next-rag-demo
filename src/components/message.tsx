@@ -12,7 +12,7 @@ export function Message({ role, content }: Props) {
   // replace [1] … with badge components
   const withBadges = content.replace(
     /\[(\d+)]/g,
-    (_, i) => `<badge index="${i}" />`
+    (_, i) => `<span data-index="${i}" />`
   );
 
   return (
@@ -22,9 +22,16 @@ export function Message({ role, content }: Props) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          badge: ({ node }) => (
-            <Badge className="mx-1 p-1">[{node.properties!.index}]</Badge>
-          ),
+          span: ({ node, ...props }) => {
+            if (node?.properties?.dataIndex) {
+              return (
+                <Badge className="mx-1 p-1">
+                  [{node.properties.dataIndex}]
+                </Badge>
+              );
+            }
+            return <span {...props} />;
+          },
         }}
       >
         {withBadges}
