@@ -19,6 +19,6 @@ datasource db {
 
 model Chunk {
   id        Int     @id @default(autoincrement())
-  content   String
+  content   String  @unique
   embedding Unsupported("vector(1536)")
 }
