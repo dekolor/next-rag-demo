@@ -9,28 +9,33 @@ type Props = {
 };
 
 export function Message({ role, content }: Props) {
-  // replace [1] … with badge components
   const withBadges = content.replace(
     /\[(\d+)]/g,
-    (_, i) => `<span data-index="${i}" />`
+    (_, i) => `[${i}](#citation-${i})`
   );
 
   return (
     <div
-      className={cn("whitespace-pre-wrap", role === "user" && "font-medium")}
+      className={cn(
+        "whitespace-pre-wrap",
+        role === "user" && "font-medium",
+        role === "assistant" && "llm-response"
+      )}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          span: ({ node, ...props }) => {
-            if (node?.properties?.dataIndex) {
+          a: ({ href, children }) => {
+            // If it's a citation link, render as Badge
+            if (href?.startsWith("#citation-")) {
               return (
-                <Badge className="mx-1 p-1">
-                  [{node.properties.dataIndex}]
+                <Badge className="mx-1 p-1" aria-label="citation">
+                  {children}
                 </Badge>
               );
             }
-            return <span {...props} />;
+            // Otherwise, render normal link
+            return <a href={href}>{children}</a>;
           },
         }}
       >

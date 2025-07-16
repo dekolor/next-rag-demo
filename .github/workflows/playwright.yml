@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      DATABASE_URL: "postgresql://unused:unused@localhost:5432/unused"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_EMBEDDING_MODEL: ${{ secrets.OPENAI_EMBEDDING_MODEL }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
+      OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Node + pnpm cache ----------------------------------------------
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # --- Install deps ----------------------------------------------------
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # --- Lint ------------------------------------------------------------
+      - name: Lint
+        run: pnpm lint
+
+      # --- Build (Next.js / Prisma types) ----------------------------------
+      - name: Build
+        run: pnpm build
+
+      # --- Install Playwright browsers (after build to reuse cache) --------
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      # --- Run server + smoke test ----------------------------------------
+      - name: Start server & run Playwright tests
+        run: |
+          pnpm start &                   # serve the production build
+          NEXT_PID=$!
+          npx wait-on http://localhost:3000 --timeout 60000
+          pnpm test
+          kill $NEXT_PID
+
+      # --- Upload HTML report as artifact ---------------------------------
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

@@ -14,7 +14,7 @@ export default function ChatPage() {
     <div className="max-w-xl mx-auto p-6 space-y-4">
       <h1 className="text-2xl font-bold mb-4">Next.js RAG Demo</h1>
 
-      <div className="space-y-3">
+      <div className="space-y-3 ">
         {messages.map((m) => (
           <Message
             key={m.id}
@@ -32,7 +32,7 @@ export default function ChatPage() {
           placeholder="Ask about Next.js docs…"
           disabled={isLoading}
         />
-        <Button type="submit" disabled={isLoading} size="icon">
+        <Button type="submit" disabled={isLoading} size="icon" aria-label="Submit">
           <Send className="h-4 w-4" />
         </Button>
       </form>

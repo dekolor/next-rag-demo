@@ -9,7 +9,8 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "prepare": "husky install",
-    "ingest": "tsx src/scripts/ingest.ts"
+    "ingest": "tsx src/scripts/ingest.ts",
+    "test": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.23",
