@@ -7,7 +7,6 @@ const TOP_K = 6;
 export async function retrieve(query: string): Promise<Chunk[]> {
   const [vector] = await embedMany([query]);
 
-  // pgvector cosine-distance search (closest first)
   return prisma.$queryRaw<Chunk[]>`
     SELECT id, content
     FROM "Chunk"
@@ -16,7 +15,6 @@ export async function retrieve(query: string): Promise<Chunk[]> {
   `;
 }
 
-/** Build the prompt with inline citations like [1], [2] … */
 export function buildPrompt(question: string, chunks: Chunk[]) {
   const sources = chunks
     .map((c, i) => `[${i + 1}] ${c.content.trim()}`)

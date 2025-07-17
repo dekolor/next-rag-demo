@@ -2,34 +2,51 @@ import { streamText } from "ai";
 import { openRouter } from "@/lib/openai";
 import { NextRequest } from "next/server";
 import { retrieve, buildPrompt } from "@/lib/rag";
-
-// export const runtime = "edge"; // fast cold-starts
+import { getSessionId } from "@/middleware/session";
+import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json(); // [{ role, content }]
+  const { messages } = await req.json();
   const userMsg = messages.at(-1)?.content || "";
+  const sessionId = await getSessionId();
 
-  // 1) retrieve
+  await prisma.message.create({
+    data: { role: "user", content: userMsg, sessionId: sessionId! },
+  })
+
   const chunks = await retrieve(userMsg);
-
-  // 2) build LLM prompt
   const prompt = buildPrompt(userMsg, chunks);
 
-  // 3) call OpenAI with streaming using AI SDK v4
   let result;
+  const sources = chunks.map((chunk, i) => ({
+    id: i + 1,
+    content: chunk.content
+  }));
+
   try {
     result = streamText({
-      model: openRouter(process.env.OPENROUTER_MODEL!), // deepseek-ai/deepseek-chat
+      model: openRouter(process.env.OPENROUTER_MODEL!),
       temperature: 0.3,
       messages: prompt,
+      async onFinish({ text }) {
+        await prisma.message.create({
+          data: { 
+            role: "assistant", 
+            content: JSON.stringify({
+              text,
+              sources
+            }), 
+            sessionId: sessionId! 
+          }
+        })
+      }
     });
   } catch (err) {
     console.error("LLM error ⇒", err);
     return new Response("Upstream LLM error", { status: 500 });
   }
 
-  // 4) return streaming response
   return result.toDataStreamResponse();
 }
