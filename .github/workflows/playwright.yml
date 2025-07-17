@@ -18,6 +18,7 @@ jobs:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       OPENROUTER_BASE_URL: ${{ secrets.OPENROUTER_BASE_URL }}
       OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
 
     steps:
       - uses: actions/checkout@v4
