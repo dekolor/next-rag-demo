@@ -6,3 +6,8 @@ onlyBuiltDependencies:
   - prisma
   - sharp
   - unrs-resolver
+
+neverBuiltDependencies: []
+
+packages:
+  - .
